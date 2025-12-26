@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - readable by all authenticated users
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if request.auth != null;
+      
+      // Users can only write their own profile
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Public chats - readable and writable by all authenticated users
+    match /publicChats/{messageId} {
+      // Anyone authenticated can read public messages
+      allow read: if request.auth != null;
+      
+      // Users can create messages with their own senderId
+      allow create: if request.auth != null 
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500;
+      
+      // Users can delete their own messages
+      allow delete: if request.auth != null 
+        && resource.data.senderId == request.auth.uid;
+    }
+    
+    // Private chats - only accessible by participants
+    match /privateChats/{chatId}/messages/{messageId} {
+      // Chat ID format: uid1_uid2 (sorted alphabetically)
+      // Users can read if their UID is in the chat ID
+      allow read: if request.auth != null 
+        && request.auth.uid in chatId.split('_');
+      
+      // Users can create messages in chats they're part of
+      allow create: if request.auth != null 
+        && request.auth.uid in chatId.split('_')
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500;
+      
+      // Users can delete their own messages
+      allow delete: if request.auth != null 
+        && resource.data.senderId == request.auth.uid;
+    }
+  }
+}
