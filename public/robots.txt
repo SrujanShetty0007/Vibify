@@ -1,14 +1,7 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# Vibify - Chat App for MITK Students
+# https://vibify.vercel.app
 
 User-agent: *
 Allow: /
+
+Sitemap: https://vibify.vercel.app/sitemap.xml

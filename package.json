@@ -1,8 +1,10 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "vibify",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Vibify - Chat App for MITK Students",
+  "author": "MITK",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

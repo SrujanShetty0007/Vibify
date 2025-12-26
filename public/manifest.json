@@ -1,0 +1,20 @@
+{
+  "name": "Vibify - Chat App for MITK Students",
+  "short_name": "Vibify",
+  "description": "Connect with MITK students through group chats and private messages",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "education"],
+  "lang": "en-US"
+}
