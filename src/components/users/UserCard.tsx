@@ -8,7 +8,26 @@ interface UserCardProps {
   customStatus?: string;
   onClick?: () => void;
   isActive?: boolean;
+  lastMessageTime?: Date;
+  unreadCount?: number;
 }
+
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Sent just now';
+  if (diffMins === 1) return 'Sent 1 min ago';
+  if (diffMins < 60) return `Sent ${diffMins} mins ago`;
+  if (diffHours === 1) return 'Sent 1 hour ago';
+  if (diffHours < 24) return `Sent ${diffHours} hours ago`;
+  if (diffDays === 1) return 'Sent 1 day ago';
+  if (diffDays < 7) return `Sent ${diffDays} days ago`;
+  return `Sent ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+};
 
 const UserCard = ({
   name,
@@ -17,6 +36,8 @@ const UserCard = ({
   customStatus,
   onClick,
   isActive,
+  lastMessageTime,
+  unreadCount = 0,
 }: UserCardProps) => {
   const initials = name
     .split(' ')
@@ -25,41 +46,61 @@ const UserCard = ({
     .toUpperCase()
     .slice(0, 2);
 
+  const hasUnread = unreadCount > 0;
+
   return (
     <div
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer group',
-        'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-slate-800 dark:hover:to-slate-700',
-        'hover:shadow-md',
-        isActive && 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 shadow-md'
+        'flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-b-0',
+        'hover:bg-slate-50 dark:hover:bg-slate-900',
+        isActive && 'bg-slate-50 dark:bg-slate-900'
       )}
     >
       <div className="relative">
-        <Avatar className="w-12 h-12 ring-2 ring-slate-200 dark:ring-slate-700 group-hover:ring-blue-500 transition-all">
+        <Avatar className="w-10 h-10">
           <AvatarImage src={photoURL} alt={name} />
-          <AvatarFallback className="bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold">
+          <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium">
             {initials}
           </AvatarFallback>
         </Avatar>
         <span
           className={cn(
-            'absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 transition-all',
-            status === 'online' ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-slate-400'
+            'absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-950',
+            status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'
           )}
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <p className={cn(
+          'text-sm font-medium text-slate-900 dark:text-white truncate',
+          hasUnread && 'font-semibold'
+        )}>
           {name}
         </p>
         {customStatus ? (
-          <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{customStatus}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{customStatus}</p>
         ) : (
-          <p className="text-xs text-slate-500 dark:text-slate-500">
-            {status === 'online' ? 'Active now' : 'Offline'}
+          <p className={cn(
+            'text-xs text-slate-500 dark:text-slate-400',
+            hasUnread && 'text-slate-700 dark:text-slate-300 font-medium'
+          )}>
+            {hasUnread ? 'New message' : status === 'online' ? 'Active now' : 'Offline'}
           </p>
         )}
+      </div>
+      <div className="flex-shrink-0">
+        {hasUnread ? (
+          <div className="min-w-[20px] h-5 px-1.5 bg-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-[11px] font-semibold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          </div>
+        ) : lastMessageTime ? (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            {formatTimeAgo(lastMessageTime)}
+          </p>
+        ) : null}
       </div>
     </div>
   );
