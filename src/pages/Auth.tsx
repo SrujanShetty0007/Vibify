@@ -88,7 +88,6 @@ const Auth = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-4">
-          <img src={logo} alt="Vibify" className="w-16 h-16 mx-auto mb-2" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             Vibify
           </h1>
@@ -135,7 +134,7 @@ const Auth = () => {
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder="your.email@mitk.edu"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-11 h-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500"
@@ -218,7 +217,7 @@ const Auth = () => {
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder="your.email@mitk.edu"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-11 h-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500"
@@ -232,7 +231,7 @@ const Auth = () => {
                       <Input
                         id="signup-password"
                         type="password"
-                        placeholder="At least 6 characters"
+                        placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-11 h-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500"
