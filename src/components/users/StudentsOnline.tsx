@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import UserCard from './UserCard';
@@ -15,6 +15,7 @@ interface UserData {
   customStatus: string;
   lastSeen: Date;
   lastChatTime?: Date;
+  lastMessageByMe?: boolean;
   unreadCount: number;
 }
 
@@ -26,7 +27,6 @@ const StudentsOnline = () => {
   const navigate = useNavigate();
 
   const handleOpenChat = (userId: string) => {
-    // Mark messages as read by storing last read time
     if (user) {
       const chatId = getChatId(user.uid, userId);
       localStorage.setItem(`lastRead_${chatId}`, new Date().toISOString());
@@ -48,14 +48,10 @@ const StudentsOnline = () => {
       async (snapshot) => {
         const otherUsers = snapshot.docs.filter((doc) => doc.id !== user.uid);
 
-        // Set up listeners for each user's chat
         const usersWithChats: UserData[] = [];
 
         for (const doc of otherUsers) {
           const data = doc.data();
-          const chatId = getChatId(user.uid, doc.id);
-          const lastReadStr = localStorage.getItem(`lastRead_${chatId}`);
-          const lastRead = lastReadStr ? new Date(lastReadStr) : new Date(0);
 
           usersWithChats.push({
             uid: doc.id,
@@ -66,6 +62,7 @@ const StudentsOnline = () => {
             customStatus: data.customStatus || '',
             lastSeen: data.lastSeen?.toDate() || new Date(),
             lastChatTime: undefined,
+            lastMessageByMe: undefined,
             unreadCount: 0,
           });
         }
@@ -101,6 +98,7 @@ const StudentsOnline = () => {
 
         let unreadCount = 0;
         let lastMessageTime: Date | undefined;
+        let lastMessageByMe: boolean | undefined;
         const now = new Date();
 
         snapshot.docs.forEach((doc, index) => {
@@ -111,9 +109,10 @@ const StudentsOnline = () => {
           // Skip expired messages
           if (expiresAt && expiresAt < now) return;
 
-          // Track last message time
-          if (index === 0 && createdAt) {
+          // Track last message info (first non-expired message)
+          if (lastMessageTime === undefined && createdAt) {
             lastMessageTime = createdAt;
+            lastMessageByMe = data.senderId === user.uid;
           }
 
           // Count unread messages (from other user, after last read)
@@ -125,7 +124,7 @@ const StudentsOnline = () => {
         setUsers((prev) =>
           prev.map((u) =>
             u.uid === userData.uid
-              ? { ...u, lastChatTime: lastMessageTime, unreadCount }
+              ? { ...u, lastChatTime: lastMessageTime, lastMessageByMe, unreadCount }
               : u
           )
         );
@@ -236,6 +235,7 @@ const StudentsOnline = () => {
                 status={userData.status}
                 customStatus={userData.customStatus}
                 lastMessageTime={userData.lastChatTime}
+                lastMessageByMe={userData.lastMessageByMe}
                 unreadCount={userData.unreadCount}
                 onClick={() => handleOpenChat(userData.uid)}
               />

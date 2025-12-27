@@ -9,24 +9,27 @@ interface UserCardProps {
   onClick?: () => void;
   isActive?: boolean;
   lastMessageTime?: Date;
+  lastMessageByMe?: boolean;
   unreadCount?: number;
 }
 
-const formatTimeAgo = (date: Date): string => {
+const formatTimeAgo = (date: Date, sentByMe: boolean): string => {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Sent just now';
-  if (diffMins === 1) return 'Sent 1 min ago';
-  if (diffMins < 60) return `Sent ${diffMins} mins ago`;
-  if (diffHours === 1) return 'Sent 1 hour ago';
-  if (diffHours < 24) return `Sent ${diffHours} hours ago`;
-  if (diffDays === 1) return 'Sent 1 day ago';
-  if (diffDays < 7) return `Sent ${diffDays} days ago`;
-  return `Sent ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  const prefix = sentByMe ? 'Sent ' : 'Received ';
+
+  if (diffMins < 1) return prefix + 'just now';
+  if (diffMins === 1) return prefix + '1 min ago';
+  if (diffMins < 60) return prefix + `${diffMins} mins ago`;
+  if (diffHours === 1) return prefix + '1 hour ago';
+  if (diffHours < 24) return prefix + `${diffHours} hours ago`;
+  if (diffDays === 1) return prefix + '1 day ago';
+  if (diffDays < 7) return prefix + `${diffDays} days ago`;
+  return prefix + date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 const UserCard = ({
@@ -37,6 +40,7 @@ const UserCard = ({
   onClick,
   isActive,
   lastMessageTime,
+  lastMessageByMe,
   unreadCount = 0,
 }: UserCardProps) => {
   const initials = name
@@ -98,7 +102,10 @@ const UserCard = ({
           </div>
         ) : lastMessageTime ? (
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
-            {formatTimeAgo(lastMessageTime)}
+            {lastMessageByMe !== undefined
+              ? formatTimeAgo(lastMessageTime, lastMessageByMe)
+              : '?'
+            }
           </p>
         ) : null}
       </div>

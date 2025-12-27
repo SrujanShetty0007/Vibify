@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { GraduationCap, Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -87,6 +88,7 @@ const Auth = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-4">
+          <img src={logo} alt="Vibify" className="w-16 h-16 mx-auto mb-2" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             Vibify
           </h1>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
-  <rect width="180" height="180" fill="#0f172a" rx="40"/>
-  <g transform="translate(45, 45)">
-    <rect width="90" height="90" fill="#3b82f6" rx="12"/>
-    <path d="M 30 35 Q 30 25 40 25 Q 50 25 50 35 L 50 55 Q 50 65 40 65 Q 30 65 30 55 Z" fill="white" opacity="0.9"/>
-    <circle cx="60" cy="40" r="8" fill="white" opacity="0.7"/>
-    <circle cx="60" cy="55" r="8" fill="white" opacity="0.7"/>
-  </g>
-</svg>

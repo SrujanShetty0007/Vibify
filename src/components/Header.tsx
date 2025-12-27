@@ -9,8 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { GraduationCap, Home, LogOut, Settings, User, ArrowLeft, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Home, LogOut, Settings, User, ArrowLeft, ChevronDown, Moon, Sun, Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { collection, query, onSnapshot, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import logo from '@/assets/logo.png';
 
 interface HeaderProps {
   showBack?: boolean;
@@ -22,15 +25,86 @@ interface HeaderProps {
 }
 
 const Header = ({ showBack, onBack, title, subtitle, chatUserPhoto, chatUserStatus }: HeaderProps) => {
-  const { userProfile, logout } = useAuth();
+  const { userProfile, logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [darkMode, setDarkMode] = useState(false);
+  const [unreadPeopleCount, setUnreadPeopleCount] = useState(0);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
     setDarkMode(isDark);
   }, []);
+
+  const getChatId = (uid1: string, uid2: string) => {
+    return [uid1, uid2].sort().join('_');
+  };
+
+  // Track unread messages from different people
+  useEffect(() => {
+    if (!user) return;
+
+    const checkUnreadMessages = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const otherUsers = usersSnapshot.docs.filter((doc) => doc.id !== user.uid);
+
+        let peopleWithUnread = 0;
+
+        for (const userDoc of otherUsers) {
+          const chatId = getChatId(user.uid, userDoc.id);
+          const lastReadStr = localStorage.getItem(`lastRead_${chatId}`);
+          const lastRead = lastReadStr ? new Date(lastReadStr) : new Date(0);
+
+          const messagesRef = collection(db, 'privateChats', chatId, 'messages');
+          const messagesSnapshot = await getDocs(query(messagesRef, orderBy('createdAt', 'desc')));
+
+          const now = new Date();
+          let hasUnreadFromThisPerson = false;
+
+          for (const msgDoc of messagesSnapshot.docs) {
+            const data = msgDoc.data();
+            const createdAt = data.createdAt?.toDate();
+            const expiresAt = data.expiresAt?.toDate();
+
+            // Skip expired messages
+            if (expiresAt && expiresAt < now) continue;
+
+            // Check if message is from other user and unread
+            if (data.senderId !== user.uid && createdAt && createdAt > lastRead) {
+              hasUnreadFromThisPerson = true;
+              break; // Only count 1 per person
+            }
+          }
+
+          if (hasUnreadFromThisPerson) {
+            peopleWithUnread++;
+          }
+        }
+
+        setUnreadPeopleCount(peopleWithUnread);
+      } catch (error) {
+        console.error('Error checking unread messages:', error);
+      }
+    };
+
+    // Initial check
+    checkUnreadMessages();
+
+    // Set up listener for real-time updates
+    const usersQuery = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(usersQuery, () => {
+      checkUnreadMessages();
+    });
+
+    // Also check periodically for new messages
+    const interval = setInterval(checkUnreadMessages, 5000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, [user]);
 
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle('dark');
@@ -100,9 +174,7 @@ const Header = ({ showBack, onBack, title, subtitle, chatUserPhoto, chatUserStat
                 className="flex items-center gap-2.5 cursor-pointer"
                 onClick={() => navigate('/')}
               >
-                <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center">
-                  <GraduationCap className="w-5 h-5 text-white dark:text-slate-900" />
-                </div>
+                <img src={logo} alt="Vibify" className="w-9 h-9 rounded-lg" />
                 {!title ? (
                   <span className="text-lg font-semibold text-slate-900 dark:text-white">Vibify</span>
                 ) : (
@@ -119,6 +191,23 @@ const Header = ({ showBack, onBack, title, subtitle, chatUserPhoto, chatUserStat
 
           {/* Right Section */}
           <div className="flex items-center gap-1.5">
+            {/* Notification Bell - shows count of people with unread messages */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/dashboard?tab=students')}
+              className="h-9 w-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
+            >
+              <Bell className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              {unreadPeopleCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white">
+                    {unreadPeopleCount > 9 ? '9+' : unreadPeopleCount}
+                  </span>
+                </span>
+              )}
+            </Button>
+
             {/* Home Button */}
             {!isHome && !showBack && (
               <Button
